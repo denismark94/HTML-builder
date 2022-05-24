@@ -53,9 +53,7 @@ async function buildHTML() {
 
 
 async function build() {
-  await fsPromises.rm(path.join(__dirname,'project-dist'),{recursive:true,force:true}).catch ((err)=>{
-    console.error(err);
-  });
+  // await rmdir(path.join(__dirname,'project-dist'));
   await fsPromises.mkdir(path.join(__dirname,'project-dist'),{recursive:true});
   buildStyles(path.join(__dirname,'styles'));
   copyDir(path.join(__dirname,'assets'));
@@ -63,3 +61,22 @@ async function build() {
 }
 
 build();
+
+
+function rmdir(src) {
+  fs.readdir(src,{withFileTypes:true},(err, files)=>{
+    if (files) {
+      files.forEach(file=>{
+        if (file.isDirectory()) {
+          copyDir(path.join(src,file.name));
+        }
+        fsPromises.rm(path.join(src,file.name),{recursive:true,force:true}).catch ((err)=>{
+          console.error(err);
+        });
+      });
+    }
+    fsPromises.rm(src,{recursive:true,force:true}).catch ((err)=>{
+      console.error(err);
+    });
+  });
+}
