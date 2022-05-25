@@ -4,7 +4,7 @@ const path = require('path');
 const bundle = path.join(__dirname,'project-dist','bundle.css');
 
 async function update(src) {
-  if (src === path.join(__dirname,'styles')) await fs.rm(bundle,(err)=>{if (err) throw err;});
+  if (src === path.join(__dirname,'styles')) await fs.promises.rm(bundle,{force:true});
   let files = await fsPromises.readdir(src,{withFileTypes:true});
   files.forEach(file=>{
     if (file.isDirectory()) {
