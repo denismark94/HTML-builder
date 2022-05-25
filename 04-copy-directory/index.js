@@ -5,7 +5,7 @@ const path = require('path');
 async function copyDir(src) {
   let dst = src.replace('files','files-copy');
   if (src === path.join(__dirname,'files')) {
-    await fsPromises.rmdir(dst,{recursive:true, force:true});
+    await fsPromises.rm(dst,{recursive:true, force:true});
   }
   fsPromises.mkdir(dst,{recursive:true});
   fs.readdir(src,{withFileTypes:true},(err, files)=>{
