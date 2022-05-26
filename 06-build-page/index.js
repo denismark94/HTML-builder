@@ -1,7 +1,6 @@
 const fsPromises = require('fs/promises');
 const fs = require('fs');
 const path = require('path');
-const { clear } = require('console');
 const bundle = path.join(__dirname,'project-dist','style.css');
 
 async function buildStyles(src) {
@@ -43,8 +42,8 @@ async function buildHTML() {
   fs.readdir(path.join(__dirname,'components'),{withFileTypes:true},(err,files)=>{
     if (err) throw err;
     files.forEach(file=>{
-      fs.readFile(path.join(__dirname,'components',file.name),'utf-8',(err, component)=>{
-        data = data.replace(`{{${file.name.replace(path.extname(file.name),'')}}}`,component);
+      fs.readFile(path.join(__dirname,'components',file.name),'utf-8',async (err, component)=>{
+        data = await data.replace(`{{${file.name.replace(/\..+/,'')}}}`,component);
         fsPromises.writeFile(path.join(__dirname,'project-dist','index.html'),data);
       });
     });
@@ -53,30 +52,28 @@ async function buildHTML() {
 
 
 async function build() {
-  // await rmdir(path.join(__dirname,'project-dist'));
-  await fsPromises.mkdir(path.join(__dirname,'project-dist'),{recursive:true});
-  buildStyles(path.join(__dirname,'styles'));
-  copyDir(path.join(__dirname,'assets'));
-  buildHTML();
+  unlink(path.join(__dirname,'project-dist')).then(()=>{
+    fsPromises.mkdir(path.join(__dirname,'project-dist'),{recursive:true}).then(()=>{
+      buildStyles(path.join(__dirname,'styles'));
+      copyDir(path.join(__dirname,'assets'));
+      buildHTML();
+    });
+  });
 }
 
 build();
 
 
-function rmdir(src) {
-  fs.readdir(src,{withFileTypes:true},(err, files)=>{
+async function unlink(src) {
+  fs.readdir(src,{withFileTypes:true},async (err, files)=>{
     if (files) {
-      files.forEach(file=>{
+      files.forEach(async file=>{
         if (file.isDirectory()) {
-          copyDir(path.join(src,file.name));
+          await unlink(path.join(src,file.name));
+        } else {
+          await fs.promises.unlink(path.join(src,file.name),{recursive:true, force:true});
         }
-        fsPromises.rm(path.join(src,file.name),{recursive:true,force:true}).catch ((err)=>{
-          console.error(err);
-        });
       });
     }
-    fsPromises.rm(src,{recursive:true,force:true}).catch ((err)=>{
-      console.error(err);
-    });
   });
 }
